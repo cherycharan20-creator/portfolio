@@ -1,0 +1,15 @@
+{
+  "name": "charan-teja-portfolio",
+  "version": "1.0.0",
+  "description": "Personal Portfolio of M. Charan Teja - Python Full Stack Developer & AI/ML Engineer",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 3000",
+    "serve": "npx serve .",
+    "dev": "python -m http.server 8080"
+  },
+  "dependencies": {
+    "@angular/core": "^22.2.5",
+    "angular": "^1.8.3"
+  }
+}

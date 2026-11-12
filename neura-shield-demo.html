@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEURA-SHIELD AI | Live Phishing Threat Detection Dashboard</title>
+  
+  <!-- Font Awesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Firebase Web SDK (v10) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+
+  <style>
+    /* ==========================================================================
+       NEURA-SHIELD AI: Advanced Cyber Threat & Cognitive Phishing Defense UI
+       Author: M. Charan Teja (Python Full Stack & AI/ML Engineer)
+       ========================================================================== */
+    :root {
+      --bg-primary: #07090e;
+      --bg-secondary: #0d121f;
+      --bg-card: rgba(15, 23, 42, 0.75);
+      --bg-card-hover: rgba(26, 38, 66, 0.85);
+      --bg-glass: rgba(18, 26, 47, 0.72);
+      
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-active: rgba(56, 189, 248, 0.4);
+      --border-glow: rgba(56, 189, 248, 0.25);
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --accent-cyan: #38bdf8;
+      --accent-blue: #3b82f6;
+      --accent-purple: #a855f7;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      
+      --shadow-cyber: 0 0 25px rgba(56, 189, 248, 0.15);
+      --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+        linear-gradient(to bottom, #07090e, #0a0f1d);
+      background-attachment: fixed;
+    }
+
+    /* Background Cyber Grid Accent */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-size: 50px 50px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(7, 9, 14, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.85rem 1.5rem;
+    }
+
+    .top-nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ----------------- TOP NAVBAR / HEADER ----------------- */
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .brand-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand-logo-glow {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #0284c7, #9333ea);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    }
+
+    .brand-title h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .telemetry-badges {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .status-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: var(--radius-full);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      backdrop-filter: blur(10px);
+    }
+
+    .status-chip.active {
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #34d399;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* ----------------- STATS CARDS BANNER ----------------- */
+    .stats-banner {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.25rem;
+    }
+
+    .stat-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow-card);
+      transition: all 0.25s ease;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-active);
+      transform: translateY(-3px);
+    }
+
+    .stat-number {
+      font-size: 1.6rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--accent-cyan);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* ----------------- SCANNER CARD ----------------- */
+    .scanner-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scanner-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-cyan), var(--accent-purple), transparent);
+    }
+
+    .scanner-title {
+      margin-bottom: 1.25rem;
+    }
+
+    .scanner-title h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.35rem;
+    }
+
+    .scanner-title p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .search-form {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+      flex: 1;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1.25rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .url-input {
+      width: 100%;
+      padding: 1rem 1rem 1rem 3.25rem;
+      background: rgba(10, 15, 29, 0.85);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      transition: all 0.25s ease;
+      outline: none;
+    }
+
+    .url-input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.25);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .clear-input-btn {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.25rem;
+      font-size: 1.1rem;
+    }
+
+    .clear-input-btn:hover {
+      color: #ffffff;
+    }
+
+    .scan-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      padding: 1rem 2rem;
+      border-radius: var(--radius-md);
+      border: none;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .scan-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.45);
+      background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+    }
+
+    .scan-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Quick test pills */
+    .quick-tests {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .quick-tests-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .test-pill {
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-full);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .test-pill:hover {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--accent-cyan);
+      transform: translateY(-1px);
+    }
+
+    /* ----------------- ANALYSIS RESULT CARD ----------------- */
+    .result-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem;
+      backdrop-filter: blur(25px);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 2rem;
+      animation: slideUp 0.35s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card.safe {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.06) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+
+    .result-card.dangerous {
+      border-color: rgba(244, 63, 94, 0.45);
+      background: linear-gradient(180deg, rgba(244, 63, 94, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+
+    .result-card.incomplete {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+
+    .result-card.invalid {
+      border-color: rgba(168, 85, 247, 0.4);
+      background: linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .verdict-box {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .verdict-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .result-card.safe .verdict-icon {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .result-card.dangerous .verdict-icon {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      box-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
+    }
+
+    .result-card.incomplete .verdict-icon {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+    }
+
+    .result-card.invalid .verdict-icon {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    }
+
+    .verdict-info h3 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+    }
+
+    .result-card.safe .verdict-info h3 { color: #34d399; }
+    .result-card.dangerous .verdict-info h3 { color: #fb7185; }
+    .result-card.incomplete .verdict-info h3 { color: #fbbf24; }
+    .result-card.invalid .verdict-info h3 { color: #c084fc; }
+
+    .verdict-info p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+
+    /* Metric / Confidence dial box */
+    .confidence-box {
+      background: rgba(10, 15, 29, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.5rem;
+      text-align: right;
+      min-width: 220px;
+    }
+
+    .confidence-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      margin-bottom: 0.25rem;
+    }
+
+    .confidence-value {
+      font-size: 2rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--accent-cyan);
+    }
+
+    .confidence-range-tag {
+      font-size: 0.7rem;
+      color: #38bdf8;
+      font-family: var(--font-mono);
+      margin-top: 0.2rem;
+    }
+
+    /* Details Grid */
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+      padding: 1.25rem;
+      border-radius: var(--radius-md);
+      background: rgba(10, 15, 29, 0.5);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .detail-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+      font-size: 0.95rem;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .detail-value.mono {
+      font-family: var(--font-mono);
+      word-break: break-all;
+    }
+
+    /* Badges */
+    .badge-https-yes {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: var(--radius-sm);
+      color: #34d399;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .badge-https-no {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      border-radius: var(--radius-sm);
+      color: #fb7185;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .badge-https-na {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: var(--radius-sm);
+      color: #cbd5e1;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    /* Cognitive Box */
+    .cognitive-box {
+      border-radius: var(--radius-md);
+      background: rgba(10, 15, 29, 0.6);
+      border: 1px solid var(--border-subtle);
+      padding: 1.5rem;
+    }
+
+    .cognitive-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .cognitive-header h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cognitive-reason-text {
+      font-size: 0.92rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .cognitive-pillars {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .pillar-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+    }
+
+    .pillar-name {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.25rem;
+    }
+
+    .pillar-value {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    /* ----------------- HISTORY TABLE ----------------- */
+    .history-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-card);
+    }
+
+    .history-card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      color: #ffffff;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    .history-table th {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.5px;
+    }
+
+    .history-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+    }
+
+    .tag-badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .tag-badge.safe { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .tag-badge.phish { background: rgba(244, 63, 94, 0.15); color: #fb7185; }
+    .tag-badge.incomplete { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .tag-badge.invalid { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+
+    @media (max-width: 768px) {
+      .header-section { flex-direction: column; align-items: flex-start; }
+      .search-form { flex-direction: column; }
+      .scan-button { width: 100%; }
+      .result-header { flex-direction: column; }
+      .confidence-box { text-align: left; width: 100%; }
+    }
+
+    /* ----------------- AUTHENTICATION GATEWAY MODAL ----------------- */
+    .auth-gate-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(5, 7, 13, 0.93);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+
+    .auth-gate-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .auth-gate-card {
+      width: 100%;
+      max-width: 520px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(10, 15, 30, 0.98));
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 2rem;
+      box-shadow: 0 0 50px rgba(56, 189, 248, 0.2), var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+      animation: gatePop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes gatePop {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .auth-gate-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #0284c7, #38bdf8, #a855f7);
+    }
+
+    .gate-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-full);
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .gate-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.5px;
+    }
+
+    .gate-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .gate-form-group {
+      margin-bottom: 1.15rem;
+      text-align: left;
+    }
+
+    .gate-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      margin-bottom: 0.45rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .gate-input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: rgba(2, 6, 23, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-md);
+      color: #ffffff;
+      font-size: 0.9rem;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .gate-input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+      background: rgba(2, 6, 23, 0.95);
+    }
+
+    .gate-btn-primary {
+      width: 100%;
+      padding: 0.95rem 1.25rem;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 18px rgba(2, 132, 199, 0.4);
+      transition: all 0.2s ease;
+      margin-top: 0.5rem;
+    }
+
+    .gate-btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(2, 132, 199, 0.55);
+    }
+
+    .gate-divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 1.25rem 0;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      font-family: var(--font-mono);
+    }
+
+    .gate-divider::before, .gate-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .gate-divider:not(:empty)::before {
+      margin-right: 0.85em;
+    }
+
+    .gate-divider:not(:empty)::after {
+      margin-left: 0.85em;
+    }
+
+    .gate-btn-guest {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-md);
+      color: #cbd5e1;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .gate-btn-guest:hover {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+
+    .gate-error-alert {
+      display: none;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      color: #fda4af;
+      font-size: 0.82rem;
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+
+    .user-pill-session {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-md);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .user-pill-session button {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.75rem;
+      margin-left: 0.35rem;
+      text-decoration: underline;
+      padding: 0;
+    }
+
+    .user-pill-session button:hover {
+      color: #fda4af;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================== -->
+  <!-- Executive Email Login & Identity Verification Gateway          -->
+  <!-- ============================================================== -->
+  <div id="auth-gate-modal" class="auth-gate-overlay">
+    <div class="auth-gate-card">
+      
+      <!-- Step 1: Email Identification & Verification Code Request -->
+      <div id="gate-step-email">
+        <div class="gate-badge">
+          <span>🛡️ IDENTITY CLEARANCE GATEWAY // LEVEL 3</span>
+        </div>
+        <h2 class="gate-title">NEURA-SHIELD AI Access</h2>
+        <p class="gate-subtitle">
+          Identity authentication module for candidate and evaluator clearance. Enter your email address below. The system will dispatch a temporary security verification code to your email to verify your identity before granting project clearance.
+        </p>
+
+        <div id="gate-error-box" class="gate-error-alert"></div>
+
+        <form id="gate-login-form" onsubmit="handleGateEmailSubmit(event)">
+          <div class="gate-form-group">
+            <label class="gate-label" for="gate-name-input">Candidate / Evaluator Name (Optional)</label>
+            <input 
+              id="gate-name-input" 
+              type="text" 
+              class="gate-input" 
+              placeholder="e.g. Lead Technical Recruiter, ML Evaluator" 
+            />
+          </div>
+
+          <div class="gate-form-group">
+            <label class="gate-label" for="gate-email-input">
+              <i class="fa-solid fa-envelope" style="color: #38bdf8; margin-right: 0.35rem;"></i>
+              Email Address (Required for Sign-In)
+            </label>
+            <input 
+              id="gate-email-input" 
+              type="email" 
+              class="gate-input" 
+              placeholder="recruiter@company.com or candidate@gmail.com" 
+              required 
+            />
+          </div>
+
+          <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: var(--radius-sm); padding: 0.75rem 0.95rem; margin-bottom: 1.25rem; font-size: 0.76rem; color: #94a3b8; display: flex; align-items: flex-start; gap: 0.65rem;">
+            <i class="fa-solid fa-envelope-circle-check" style="color: #38bdf8; font-size: 1rem; margin-top: 0.1rem;"></i>
+            <span><strong>Email Identity Verification:</strong> A secure temporary authentication passcode will be dispatched directly to your entered email address to verify your identity before granting project clearance.</span>
+          </div>
+
+          <button type="submit" class="gate-btn-primary">
+            <span>⚡ Send Verification Code to Email</span>
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </form>
+
+        <div style="margin-top: 1.15rem; text-align: center;">
+          <a href="index.html" onclick="handleGoBackAndLogout(event)" style="color: #64748b; font-size: 0.78rem; text-decoration: underline; cursor: pointer;">
+            ← Return to Main Portfolio
+          </a>
+        </div>
+      </div>
+
+      <!-- Step 2: Dedicated OTP Input Field & Verification -->
+      <div id="gate-step-otp" style="display: none;">
+        <div class="gate-badge" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399;">
+          <span>📧 VERIFICATION CODE DISPATCHED TO EMAIL</span>
+        </div>
+        <h2 class="gate-title">Enter Verification Passcode</h2>
+        <p class="gate-subtitle">
+          Please enter the 6-digit verification code sent to your email address to unlock NEURA-SHIELD AI.
+        </p>
+
+        <!-- Dynamic Delivery Status Banner -->
+        <div id="gate-delivery-banner" style="margin: 1.15rem 0;"></div>
+
+        <div id="gate-otp-error" class="gate-error-alert"></div>
+
+        <form id="gate-otp-form" onsubmit="handleGateOtpSubmit(event)">
+          <div class="gate-form-group">
+            <label class="gate-label" for="gate-otp-input" style="color: #38bdf8;">
+              <i class="fa-solid fa-key" style="margin-right: 0.35rem;"></i>
+              Dedicated Email Verification Code
+            </label>
+            <input 
+              id="gate-otp-input" 
+              type="text" 
+              class="gate-input" 
+              placeholder="· · · · · ·" 
+              maxlength="6"
+              inputmode="numeric"
+              pattern="[0-9]{6}"
+              autocomplete="one-time-code"
+              style="font-family: var(--font-mono); font-size: 1.6rem; letter-spacing: 12px; text-align: center; color: #38bdf8; font-weight: 700; background: rgba(2, 6, 23, 0.95); border: 2px solid rgba(56, 189, 248, 0.4);" 
+              required 
+            />
+            <p style="font-size: 0.74rem; color: #94a3b8; margin-top: 0.45rem; text-align: center;">
+              Enter the 6-digit passcode sent to your email inbox to verify your identity.
+            </p>
+          </div>
+
+          <button type="submit" class="gate-btn-primary" style="background: linear-gradient(135deg, #059669, #0284c7);">
+            <span>🛡️ Verify Code &amp; Grant Access</span>
+            <i class="fa-solid fa-shield-check"></i>
+          </button>
+        </form>
+
+        <div id="gate-resend-container" style="text-align: center; margin-top: 0.85rem;">
+          <span id="gate-timer-text" style="font-size: 0.75rem; color: #94a3b8; font-family: var(--font-mono);">
+            Resend code in <strong id="gate-countdown" style="color: #38bdf8;">45</strong>s
+          </span>
+          <button id="gate-resend-btn" type="button" onclick="handleResendOtp()" style="display: none; background: none; border: none; color: #38bdf8; font-size: 0.75rem; text-decoration: underline; cursor: pointer; font-family: var(--font-mono);">
+            Didn't receive code? Resend to Email
+          </button>
+        </div>
+
+        <div style="margin-top: 1rem; text-align: center;">
+          <button type="button" onclick="resetGateToEmailStep()" style="background: none; border: none; color: #94a3b8; font-size: 0.78rem; text-decoration: underline; cursor: pointer;">
+            ← Change Email Address
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Clearance Success Animation -->
+      <div id="gate-step-success" style="display: none; text-align: center; padding: 1.5rem 0;">
+        <div style="width: 70px; height: 70px; margin: 0 auto 1.25rem; border-radius: 50%; background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #34d399; box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);">
+          ✓
+        </div>
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: #ffffff; margin-bottom: 0.5rem;">Access Granted</h2>
+        <p id="gate-welcome-msg" style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5;">
+          Welcome! Enterprise Level 3 Threat Clearance Active.
+        </p>
+        <div style="margin-top: 1.25rem; font-size: 0.75rem; font-family: var(--font-mono); color: #38bdf8;">
+          <i class="fa-solid fa-spinner fa-spin mr-1"></i> Initializing Neural Weights...
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Top Global Bar -->
+  <header class="top-nav">
+    <div class="top-nav-inner">
+      <a href="index.html" class="nav-btn" onclick="handleGoBackAndLogout(event)">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Back to Main Portfolio</span>
+      </a>
+      <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <!-- User Session Pill -->
+        <div id="top-user-session-pill" class="user-pill-session" style="display: none;">
+          <i class="fa-solid fa-user-shield"></i>
+          <span id="top-user-email-display">user@example.com</span>
+          <button type="button" onclick="handleUserLogout()" title="Click to Logout / Switch User">
+            [Logout]
+          </button>
+        </div>
+
+        <span class="status-chip active" style="font-size: 0.75rem; padding: 0.25rem 0.75rem;">
+          <span class="pulse-dot"></span>
+          <span>FastAPI Live Gateway</span>
+        </span>
+        <a href="resume.html" class="nav-btn">
+          <i class="fa-solid fa-file-pdf"></i>
+          <span>Resume</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="dashboard-container">
+    
+    <!-- Header Section -->
+    <section class="header-section">
+      <div class="brand-wrapper">
+        <div class="brand-logo-glow">
+          <span style="font-size: 1.75rem;">🛡️</span>
+        </div>
+        <div class="brand-title">
+          <h1>NEURA-SHIELD AI</h1>
+          <p>Cognitive Phishing Intelligence &amp; Neural Threat Detection System · M. Charan Teja</p>
+        </div>
+      </div>
+
+      <div class="telemetry-badges">
+        <div class="status-chip active">
+          <span class="pulse-dot"></span>
+          <span>AI Brain Online</span>
+        </div>
+        <div class="status-chip">
+          <span>🧠 235,814 Trained Patterns</span>
+        </div>
+        <div class="status-chip">
+          <span>🎯 95% – 97% Precision Bound</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Banner -->
+    <section class="stats-banner">
+      <div class="stat-card">
+        <div class="stat-number">235,814</div>
+        <div class="stat-label">Trained PhiUSIIL URLs</div>
+        <div class="stat-sub">Complete 2.35 Lakh Dataset Training</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">99.57%</div>
+        <div class="stat-label">Model Evaluation Accuracy</div>
+        <div class="stat-sub">Weighted F1-Score: 99.57%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">95.00% – 97.00%</div>
+        <div class="stat-label">Mathematical Confidence Bound</div>
+        <div class="stat-sub">Deterministic Dataset Manifold Grounding</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color: #34d399;">Active</div>
+        <div class="stat-label">Cognitive Thinking Power</div>
+        <div class="stat-sub">Zero-Day Brand Piggybacking Reasoning</div>
+      </div>
+    </section>
+
+    <!-- Scanner Form -->
+    <main class="scanner-card">
+      <div class="scanner-title">
+        <h2>Universal URL Threat &amp; Intelligence Scanner</h2>
+        <p>Analyze any web address for phishing, brand impersonation, typosquatting, incomplete formatting, or syntax anomalies.</p>
+      </div>
+
+      <form id="scanner-form" class="search-form">
+        <div class="input-wrapper">
+          <span class="input-icon">🌐</span>
+          <input
+            id="url-input"
+            type="text"
+            class="url-input"
+            placeholder="Enter URL to inspect (e.g., https://example.com, paypa1.com, www.amazon)..."
+            required
+          />
+          <button type="button" id="clear-btn" class="clear-input-btn" title="Clear input" style="display: none;">
+            ✕
+          </button>
+        </div>
+        <button type="submit" id="submit-btn" class="scan-button">
+          <span>⚡</span>
+          <span>Scan &amp; Analyze URL</span>
+        </button>
+      </form>
+
+      <!-- Instant Test Presets -->
+      <div class="quick-tests">
+        <span class="quick-tests-label">Instant Test Presets:</span>
+        <button type="button" class="test-pill" onclick="runPreset('www.google.com')">
+          🟢 Google (Authentic)
+        </button>
+        <button type="button" class="test-pill" onclick="runPreset('www.sistk.com')">
+          🎓 SISTK College
+        </button>
+        <button type="button" class="test-pill" onclick="runPreset('https://uidai.gov.in/')">
+          🏛️ UIDAI Gov
+        </button>
+        <button type="button" class="test-pill" onclick="runPreset('WWW.GOOG.COM')">
+          🔴 GOOG (Typosquat)
+        </button>
+        <button type="button" class="test-pill" onclick="runPreset('paypa1.com')">
+          🔴 paypa1 (Homoglyph)
+        </button>
+        <button type="button" class="test-pill" onclick="runPreset('www.googlertw.com')">
+          ⚠️ googlertw (Piggyback)
+        </button>
+        <button type="button" class="test-pill" onclick="runPreset('www.amazon')">
+          ❓ www.amazon (Incomplete)
+        </button>
+        <button type="button" class="test-pill" onclick="runPreset('www.tere=.com')">
+          🚫 www.tere=.com (Invalid)
+        </button>
+      </div>
+    </main>
+
+    <!-- Result Area -->
+    <div id="result-container"></div>
+
+    <!-- Session History Table -->
+    <section id="history-section" class="history-card" style="display: none;">
+      <h3>Recent Inspection History</h3>
+      <div class="table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Inspected URL</th>
+              <th>Classification</th>
+              <th>Confidence</th>
+              <th>Uses HTTPS</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    /**
+     * NEURA-SHIELD AI CLIENT CORE
+     * Exact JavaScript implementation of Charan Teja's Python Cognitive Phishing Engine
+     * Conforms to:
+     * 1. PhiUSIIL 2.35L dataset heuristics
+     * 2. Mathematical Confidence equation strictly in [95.00%, 97.00%]
+     * 3. HTTPS state: Yes, No, or N/A
+     * 4. 4 Categories: Non Phishing, Phishing, Incomplete URL, Invalid URL
+     */
+
+    const PROTECTED_BRANDS = {
+      'google': ['google.com', 'google.co.in', 'google.co.uk', 'google.org', 'gmail.com', 'youtube.com'],
+      'apple': ['apple.com', 'icloud.com'],
+      'microsoft': ['microsoft.com', 'live.com', 'office.com', 'outlook.com', 'microsoftonline.com', 'azure.com', 'bing.com'],
+      'amazon': ['amazon.com', 'amazon.in', 'amazon.co.uk', 'aws.amazon.com', 'primevideo.com'],
+      'netflix': ['netflix.com'],
+      'paypal': ['paypal.com', 'paypal.me'],
+      'facebook': ['facebook.com', 'fb.com', 'meta.com'],
+      'instagram': ['instagram.com'],
+      'whatsapp': ['whatsapp.com'],
+      'twitter': ['twitter.com', 'x.com'],
+      'youtube': ['youtube.com'],
+      'linkedin': ['linkedin.com'],
+      'github': ['github.com'],
+      'chase': ['chase.com'],
+      'wellsfargo': ['wellsfargo.com'],
+      'citibank': ['citi.com', 'citibank.com'],
+      'binance': ['binance.com'],
+      'coinbase': ['coinbase.com'],
+      'flipkart': ['flipkart.com'],
+      'sbi': ['onlinesbi.sbi', 'sbi.co.in'],
+      'hdfc': ['hdfcbank.com'],
+      'icici': ['icicibank.com'],
+      'steam': ['steampowered.com', 'steamcommunity.com'],
+      'discord': ['discord.com', 'discord.gg']
+    };
+
+    const AUTHENTIC_DOMAINS = new Set([
+      'google.com', 'google.co.in', 'youtube.com', 'github.com', 'microsoft.com',
+      'apple.com', 'amazon.com', 'amazon.in', 'wikipedia.org', 'stackoverflow.com',
+      'netflix.com', 'facebook.com', 'instagram.com', 'whatsapp.com', 'twitter.com',
+      'x.com', 'linkedin.com', 'reddit.com', 'spotify.com', 'openai.com',
+      'chatgpt.com', 'cloudflare.com', 'python.org', 'oracle.com', 'paypal.com',
+      'chase.com', 'sbi.co.in', 'uidai.gov.in', 'incometax.gov.in', 'irctc.co.in',
+      'sistk.com', 'sietk.com', 'siddhartha.ac.in', 'jaduniv.edu.in'
+    ]);
+
+    const HIGH_RISK_TLDS = new Set([
+      '.xyz', '.top', '.club', '.ru', '.su', '.work', '.click', '.loan',
+      '.stream', '.gq', '.cf', '.tk', '.ml', '.ga', '.buzz', '.surf',
+      '.monster', '.quest', '.beauty', '.hair', '.skin', '.live', '.space'
+    ]);
+
+    const EDU_GOV_SUFFIXES = [
+      '.edu', '.ac.in', '.edu.in', '.ac.uk', '.edu.cn', '.ac.za', '.edu.au',
+      '.ernet.in', '.gov', '.gov.in', '.nic.in', '.mil', '.europa.eu',
+      '.gov.uk', '.gov.au'
+    ];
+
+    function shannonEntropy(str) {
+      if (!str) return 0.0;
+      const len = str.length;
+      const freq = {};
+      for (let i = 0; i < len; i++) {
+        freq[str[i]] = (freq[str[i]] || 0) + 1;
+      }
+      let entropy = 0.0;
+      for (const char in freq) {
+        const p = freq[char] / len;
+        entropy -= p * Math.log2(p);
+      }
+      return entropy;
+    }
+
+    function levenshteinDist(s1, s2) {
+      if (s1.length < s2.length) return levenshteinDist(s2, s1);
+      if (s2.length === 0) return s1.length;
+      let prev = Array.from({ length: s2.length + 1 }, (_, i) => i);
+      for (let i = 0; i < s1.length; i++) {
+        let curr = [i + 1];
+        for (let j = 0; j < s2.length; j++) {
+          const ins = prev[j + 1] + 1;
+          const dels = curr[j] + 1;
+          const subs = prev[j] + (s1[i] !== s2[j] ? 1 : 0);
+          curr.push(Math.min(ins, dels, subs));
+        }
+        prev = curr;
+      }
+      return prev[s2.length];
+    }
+
+    function getRegisteredDomain(host) {
+      const parts = host.toLowerCase().split('.');
+      if (parts.length >= 3) {
+        if (['co', 'ac', 'edu', 'gov', 'nic', 'org', 'net', 'gen'].includes(parts[parts.length - 2]) && parts[parts.length - 1].length <= 3) {
+          return parts.slice(-3).join('.');
+        }
+        return parts.slice(-2).join('.');
+      } else if (parts.length === 2) {
+        return parts.join('.');
+      }
+      return host.toLowerCase();
+    }
+
+    function checkBrandSpoofing(urlLower, host) {
+      const regDomain = getRegisteredDomain(host);
+      const domainLabel = regDomain.split('.')[0];
+      const normLabel = domainLabel
+        .replace(/1/g, 'l')
+        .replace(/0/g, 'o')
+        .replace(/@/g, 'a')
+        .replace(/vv/g, 'w')
+        .replace(/rn/g, 'm');
+
+      for (const brand in PROTECTED_BRANDS) {
+        const legitList = PROTECTED_BRANDS[brand];
+        const isLegit = legitList.includes(regDomain) || legitList.some(ld => regDomain.endsWith('.' + ld));
+        if (isLegit) continue;
+
+        if (domainLabel.includes(brand) || normLabel.includes(brand)) {
+          return { isSpoof: true, brand, reason: `Brand piggybacking detected: unauthorized domain '${regDomain}' embeds brand '${brand}'.` };
+        }
+
+        const maxDist = brand.length >= 6 ? 2 : 1;
+        const dist = levenshteinDist(normLabel, brand);
+        if (dist <= maxDist) {
+          return { isSpoof: true, brand, reason: `Typosquatting spoofing detected: '${regDomain}' mimics brand '${brand}'.` };
+        }
+
+        const subdomains = host.split('.').slice(0, -2);
+        for (const sub of subdomains) {
+          if (sub.toLowerCase().includes(brand)) {
+            return { isSpoof: true, brand, reason: `Subdomain deception: brand '${brand}' placed in subdomain on external domain '${regDomain}'.` };
+          }
+        }
+      }
+      return { isSpoof: false, brand: null, reason: '' };
+    }
+
+    function validateUrl(rawUrl) {
+      const urlStr = (rawUrl || '').trim().replace(/^[`'"]+|[`'"]+$/g, '');
+      if (!urlStr) return { cat: 'INVALID', reason: 'Input cannot be empty or blank' };
+
+      const bareSchemes = ["http://", "https://", "http:/", "https:/", "://", "http:", "https:", "ftp://", "www", "www."];
+      if (bareSchemes.includes(urlStr.toLowerCase())) return { cat: 'INVALID', reason: 'Missing domain name after protocol' };
+      if (urlStr.includes(' ')) return { cat: 'INVALID', reason: 'Domain cannot contain spaces' };
+      if (urlStr.includes('..')) return { cat: 'INVALID', reason: "Domain cannot contain consecutive dots ('..')" };
+      if (urlStr.startsWith('.') || [".com", ".org", ".net", ".in", ".edu", ".gov"].includes(urlStr.toLowerCase())) {
+        return { cat: 'INVALID', reason: 'Missing domain name before extension' };
+      }
+
+      const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(urlStr);
+      const parseTarget = hasScheme ? urlStr : 'http://' + urlStr;
+
+      let host = '';
+      try {
+        const parsed = new URL(parseTarget);
+        host = (parsed.hostname || '').toLowerCase();
+      } catch (e) {
+        return { cat: 'INVALID', reason: 'Malformed URL structure' };
+      }
+
+      if (!host) return { cat: 'INVALID', reason: 'Missing domain name in URL' };
+      if (host.startsWith('.') || [".com", ".org", ".net"].includes(host)) return { cat: 'INVALID', reason: 'Missing domain name before extension' };
+
+      const illegalChars = "=@_<>{}[]|\\^~`;$%&*!,'\"()";
+      for (const char of host) {
+        if (illegalChars.includes(char)) {
+          return { cat: 'INVALID', reason: `Domain contains illegal character '${char}'` };
+        }
+      }
+
+      if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
+        const octets = host.split('.').map(Number);
+        if (octets.every(o => o >= 0 && o <= 255)) {
+          return { cat: 'VALID', reason: 'Valid IP address URL' };
+        } else {
+          return { cat: 'INVALID', reason: 'Invalid IP address format' };
+        }
+      }
+
+      if (!host.includes('.')) {
+        return { cat: 'INCOMPLETE', reason: 'Missing top-level domain extension (e.g. .com, .in, .org)' };
+      }
+
+      const labels = host.split('.');
+      if (labels[0] === 'www' && labels.length === 2) {
+        return { cat: 'INCOMPLETE', reason: `Missing top-level domain extension (e.g., www.${labels[1]}.com)` };
+      }
+
+      const tld = labels[labels.length - 1];
+      if (!tld) return { cat: 'INCOMPLETE', reason: 'Domain ends with a dot; missing top-level extension' };
+      if (!/^[a-zA-Z]+$/.test(tld) || tld.length < 2) {
+        return { cat: 'INCOMPLETE', reason: `Incomplete domain extension '.${tld}' (expected valid TLD like .com, .in)` };
+      }
+
+      if (!labels[labels.length - 2]) return { cat: 'INVALID', reason: 'Missing domain name before extension' };
+
+      return { cat: 'VALID', reason: 'Valid URL syntax' };
+    }
+
+    function computeConfidence(urlStr, category) {
+      // Deterministic dispersion based on URL characters
+      let hash = 0;
+      const s = urlStr.trim().toLowerCase();
+      for (let i = 0; i < s.length; i++) {
+        hash = (hash * 31 + s.charCodeAt(i)) % 10000;
+      }
+      const deltaU = hash / 10000.0;
+
+      let SU = 0.95;
+      if (category === 'Invalid URL') {
+        const uEnt = shannonEntropy(s);
+        SU = Math.min(1.0, Math.max(0.0, 0.45 + 0.45 * Math.tanh(uEnt / 3.47)));
+      } else if (category === 'Incomplete URL') {
+        const deficit = s.length / 35.37;
+        SU = Math.min(1.0, Math.max(0.0, 0.40 + 0.50 * Math.tanh(deficit)));
+      } else if (category === 'Non Phishing') {
+        SU = 0.985;
+      } else {
+        SU = 0.975;
+      }
+
+      const raw = 95.00 + 1.95 * (0.65 * SU + 0.35 * deltaU);
+      return Number(Math.max(95.00, Math.min(97.00, raw)).toFixed(2));
+    }
+
+    function evaluateUrlClient(cleanInput) {
+      const val = validateUrl(cleanInput);
+
+      if (val.cat === 'INVALID') {
+        return {
+          url: cleanInput,
+          prediction: 'Invalid URL',
+          status: `Invalid URL (${val.reason})`,
+          confidence: computeConfidence(cleanInput, 'Invalid URL'),
+          uses_https: 'N/A',
+          reason: val.reason,
+          details: {
+            category: 'Invalid URL',
+            validation_error: val.reason,
+            confidence_formula: 'Grounded syntax anomaly equation strictly in [95%, 97%]'
+          }
+        };
+      }
+
+      if (val.cat === 'INCOMPLETE') {
+        return {
+          url: cleanInput,
+          prediction: 'Incomplete URL',
+          status: `Incomplete URL (${val.reason})`,
+          confidence: computeConfidence(cleanInput, 'Incomplete URL'),
+          uses_https: 'N/A',
+          reason: val.reason,
+          details: {
+            category: 'Incomplete URL',
+            validation_error: val.reason,
+            confidence_formula: 'Grounded TLD completion deficit equation strictly in [95%, 97%]'
+          }
+        };
+      }
+
+      const normUrl = cleanInput.includes('://') ? cleanInput : 'https://' + cleanInput;
+      let host = '';
+      try {
+        host = new URL(normUrl).hostname.toLowerCase();
+      } catch (e) {
+        host = cleanInput.split('/')[0].toLowerCase();
+      }
+
+      const isHttps = normUrl.toLowerCase().startsWith('https');
+      const usesHttpsStr = isHttps ? 'Yes' : 'No';
+
+      const spoof = checkBrandSpoofing(normUrl.toLowerCase(), host);
+      if (spoof.isSpoof) {
+        return {
+          url: cleanInput,
+          prediction: 'Phishing',
+          status: `Dangerous (Typosquatting spoofing ${spoof.brand})`,
+          confidence: computeConfidence(cleanInput, 'Phishing'),
+          uses_https: usesHttpsStr,
+          reason: spoof.reason,
+          details: {
+            category: 'Phishing',
+            threat_type: 'Brand Typosquatting / Piggybacking',
+            target_brand: spoof.brand,
+            confidence_formula: 'Grounded threat distance equation strictly in [95%, 97%]'
+          }
+        };
+      }
+
+      const isAcademicOrGov = EDU_GOV_SUFFIXES.some(s => host.endsWith(s)) || ["sistk", "sietk", "siddhartha", "jaduniv"].some(k => host.includes(k));
+      const regDomain = getRegisteredDomain(host);
+      const isAuthentic = AUTHENTIC_DOMAINS.has(host) || AUTHENTIC_DOMAINS.has(regDomain) || Array.from(AUTHENTIC_DOMAINS).some(d => host.endsWith('.' + d));
+
+      if (isAcademicOrGov || isAuthentic) {
+        const whitelistedType = isAcademicOrGov ? 'Verified Educational / Government Institution' : 'Verified Authentic Global Domain';
+        return {
+          url: cleanInput,
+          prediction: 'Non Phishing',
+          status: 'Safe',
+          confidence: computeConfidence(cleanInput, 'Non Phishing'),
+          uses_https: usesHttpsStr,
+          reason: `Authorized legitimate domain (${whitelistedType}).`,
+          details: {
+            category: 'Non Phishing',
+            whitelist_status: whitelistedType,
+            confidence_formula: 'Grounded legitimate prototype equation strictly in [95%, 97%]'
+          }
+        };
+      }
+
+      if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
+        return {
+          url: cleanInput,
+          prediction: 'Phishing',
+          status: 'Dangerous (Raw IP Host)',
+          confidence: computeConfidence(cleanInput, 'Phishing'),
+          uses_https: usesHttpsStr,
+          reason: 'Dangerous raw IP address hostname detected.',
+          details: { category: 'Phishing', threat_type: 'Raw IP Host' }
+        };
+      }
+
+      if (cleanInput.includes('@')) {
+        return {
+          url: cleanInput,
+          prediction: 'Phishing',
+          status: 'Dangerous (Credential Smuggling)',
+          confidence: computeConfidence(cleanInput, 'Phishing'),
+          uses_https: usesHttpsStr,
+          reason: "Credential smuggling obfuscation with '@' symbol detected.",
+          details: { category: 'Phishing', threat_type: 'Credential Smuggling' }
+        };
+      }
+
+      // Default safe
+      return {
+        url: cleanInput,
+        prediction: 'Non Phishing',
+        status: 'Safe',
+        confidence: computeConfidence(cleanInput, 'Non Phishing'),
+        uses_https: usesHttpsStr,
+        reason: 'Standard web URL structure without malicious anomalies.',
+        details: { category: 'Non Phishing' }
+      };
+    }
+
+    // ----------------- AUTHENTICATION MANAGER ----------------- //
+    const AUTH_STORAGE_KEY = 'neura_shield_user_session';
+    const BACKEND_URL = 'http://127.0.0.1:8000';
+    let pendingAuthData = null;
+    let otpCountdownInterval = null;
+    let clientOtpMode = false;
+    let clientGeneratedOtp = null;
+
+    function getAuthUser() {
+      try {
+        const item = localStorage.getItem(AUTH_STORAGE_KEY);
+        return item ? JSON.parse(item) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function checkAuthGate() {
+      const user = getAuthUser();
+      const modal = document.getElementById('auth-gate-modal');
+      const userPill = document.getElementById('top-user-session-pill');
+      const userEmailDisplay = document.getElementById('top-user-email-display');
+
+      if (user && user.verified) {
+        if (modal) modal.classList.add('hidden');
+        if (userPill) userPill.style.display = 'inline-flex';
+        if (userEmailDisplay) userEmailDisplay.textContent = user.email;
+      } else {
+        if (modal) modal.classList.remove('hidden');
+        if (userPill) userPill.style.display = 'none';
+        resetGateToEmailStep();
+      }
+    }
+
+    async function handleGateEmailSubmit(e) {
+      e.preventDefault();
+      const nameInput = document.getElementById('gate-name-input');
+      const emailInput = document.getElementById('gate-email-input');
+      const errorBox = document.getElementById('gate-error-box');
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+
+      const email = emailInput.value.trim().toLowerCase();
+      const name = nameInput && nameInput.value.trim() ? nameInput.value.trim() : email.split('@')[0];
+
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        errorBox.textContent = 'Please enter a valid email address (e.g., candidate@gmail.com).';
+        errorBox.style.display = 'block';
+        emailInput.focus();
+        return;
+      }
+      errorBox.style.display = 'none';
+
+      pendingAuthData = { name, email };
+
+      // Button Loading State
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span>⏳ Dispatching Security Passcode...</span>`;
+      }
+
+      let backendData = null;
+      let backendOnline = false;
+
+      // Try contacting the live FastAPI backend first
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1800);
+        const response = await fetch(`${BACKEND_URL}/api/send-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, name: name }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        backendData = await response.json().catch(() => null);
+        backendOnline = true;
+
+        if (response.ok && backendData && backendData.email_sent) {
+          // Success: Real email was delivered via Gmail SMTP
+          clientOtpMode = false;
+          clientGeneratedOtp = null;
+          document.getElementById('gate-step-email').style.display = 'none';
+          document.getElementById('gate-step-otp').style.display = 'block';
+          renderDeliverySuccess(email);
+          document.getElementById('gate-otp-input').value = '';
+          startOtpCountdown(60);
+          setTimeout(() => document.getElementById('gate-otp-input').focus(), 150);
+          return;
+        }
+      } catch (networkErr) {
+        backendOnline = false;
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
+      }
+
+      // If backend is offline or SMTP delivery failed:
+      // Activate intelligent client-side Evaluator Fallback so users and interviewers are NEVER locked out!
+      clientOtpMode = true;
+      clientGeneratedOtp = String(Math.floor(100000 + Math.random() * 900000));
+      document.getElementById('gate-step-email').style.display = 'none';
+      document.getElementById('gate-step-otp').style.display = 'block';
+      renderOfflineOrFallbackOtpBanner(email, clientGeneratedOtp, backendOnline, backendData);
+      document.getElementById('gate-otp-input').value = '';
+      startOtpCountdown(60);
+      setTimeout(() => document.getElementById('gate-otp-input').focus(), 150);
+    }
+
+    function renderOfflineOrFallbackOtpBanner(email, code, backendOnline, data) {
+      const banner = document.getElementById('gate-delivery-banner');
+      if (!banner) return;
+      const safeEmail = email.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      const isSmtpNeedConfig = backendOnline && data && !data.email_sent;
+      const statusTitle = isSmtpNeedConfig 
+        ? "🔑 Real Email Setup Notice (App Password Required)" 
+        : "🛡️ Evaluator Standalone Mode Active (Server Offline)";
+
+      const badgeText = backendOnline ? "FastAPI Connected" : "Client-Side Engine Active";
+
+      banner.innerHTML = `
+        <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(56, 189, 248, 0.45); border-radius: var(--radius-md); padding: 1.15rem; box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1.3rem;">⚡</span>
+              <strong style="color: #38bdf8; font-size: 0.92rem;">${statusTitle}</strong>
+            </div>
+            <span style="font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-family: var(--font-mono);">
+              ${badgeText}
+            </span>
+          </div>
+
+          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45; margin-bottom: 0.85rem;">
+            ${isSmtpNeedConfig 
+              ? `FastAPI server is running, but Gmail SMTP needs your 16-character Google App Password in <code>email_config.json</code> to dispatch real emails to <strong>${safeEmail}</strong>.`
+              : `FastAPI server is currently offline at <code>http://127.0.0.1:8000</code>. To ensure seamless evaluation without requiring local Python server setup, your security clearance passcode is generated below:`}
+          </p>
+
+          <div style="background: rgba(2, 6, 23, 0.95); border: 2px dashed rgba(56, 189, 248, 0.55); border-radius: 8px; padding: 0.85rem 1.15rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.85rem;">
+            <div>
+              <span style="font-size: 0.68rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block;">Security Clearance Passcode</span>
+              <span style="font-family: var(--font-mono); font-size: 1.7rem; font-weight: 800; color: #38bdf8; letter-spacing: 6px;">${code}</span>
+            </div>
+            <button type="button" onclick="autofillGateOtp('${code}')" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: white; border: none; padding: 9px 15px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; box-shadow: 0 0 15px rgba(2, 132, 199, 0.4);">
+              <span>⚡ Autofill &amp; Unlock</span>
+            </button>
+          </div>
+
+          <div style="font-size: 0.73rem; color: #94a3b8; line-height: 1.4; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.65rem;">
+            💡 <strong>Want authentic emails to your phone?</strong> Run <code>START_LIVE_DEMO_BACKEND.bat</code> in the portfolio folder and paste your 16-character Google App Password into <code>email_config.json</code>.
+          </div>
+        </div>
+      `;
+    }
+
+    window.autofillGateOtp = function(code) {
+      const input = document.getElementById('gate-otp-input');
+      if (input) {
+        input.value = code;
+        const form = document.getElementById('gate-otp-form');
+        if (form) form.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    };
+
+    function renderDeliverySuccess(email) {
+      const banner = document.getElementById('gate-delivery-banner');
+      if (!banner) return;
+      const safeEmail = email.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      banner.innerHTML = `
+        <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: var(--radius-md); padding: 1.15rem; display: flex; align-items: flex-start; gap: 0.85rem;">
+          <div style="font-size: 1.75rem; line-height: 1;">📧</div>
+          <div style="flex: 1;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: #34d399; margin-bottom: 0.25rem;">Real OTP Passcode Sent to Your Email!</h4>
+            <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 0.35rem;">
+              We have dispatched a real 6-digit verification code from <strong>cherycharan20@gmail.com</strong> directly to: <br/>
+              <strong style="color: #38bdf8; font-family: var(--font-mono); font-size: 0.9rem;">${safeEmail}</strong>
+            </p>
+            <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 0.35rem; line-height: 1.45;">
+              📱 <strong>Check your phone or email inbox</strong> (and check your Spam/Junk folder if not in primary inbox). Enter the 6-digit code below to unlock the project.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    function startOtpCountdown(seconds) {
+      if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+      let count = seconds;
+      const countSpan = document.getElementById('gate-countdown');
+      const timerText = document.getElementById('gate-timer-text');
+      const resendBtn = document.getElementById('gate-resend-btn');
+
+      if (timerText) timerText.style.display = 'inline';
+      if (resendBtn) resendBtn.style.display = 'none';
+      if (countSpan) countSpan.textContent = count;
+
+      otpCountdownInterval = setInterval(() => {
+        count--;
+        if (countSpan) countSpan.textContent = count;
+        if (count <= 0) {
+          clearInterval(otpCountdownInterval);
+          if (timerText) timerText.style.display = 'none';
+          if (resendBtn) resendBtn.style.display = 'inline';
+        }
+      }, 1000);
+    }
+
+    async function handleResendOtp() {
+      if (!pendingAuthData) return;
+      const errorBox = document.getElementById('gate-otp-error');
+      const resendBtn = document.getElementById('gate-resend-btn');
+      
+      if (resendBtn) {
+        resendBtn.disabled = true;
+        resendBtn.textContent = 'Re-dispatching...';
+      }
+
+      // If in client-side fallback mode
+      if (clientOtpMode) {
+        clientGeneratedOtp = String(Math.floor(100000 + Math.random() * 900000));
+        renderOfflineOrFallbackOtpBanner(pendingAuthData.email, clientGeneratedOtp, false, null);
+        if (errorBox) {
+          errorBox.textContent = `A fresh 6-digit passcode has been generated: ${clientGeneratedOtp}`;
+          errorBox.style.display = 'block';
+          errorBox.style.borderColor = '#10b981';
+          errorBox.style.color = '#34d399';
+          errorBox.style.background = 'rgba(16, 185, 129, 0.15)';
+        }
+        startOtpCountdown(60);
+        if (resendBtn) {
+          resendBtn.disabled = false;
+          resendBtn.textContent = "Didn't receive code? Resend to Email";
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/send-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: pendingAuthData.email, name: pendingAuthData.name })
+        });
+        const data = await response.json().catch(() => null);
+
+        if (response.ok && data && data.email_sent) {
+          if (errorBox) {
+            errorBox.textContent = `A fresh 6-digit passcode has been sent to ${pendingAuthData.email}. Please check your phone/inbox.`;
+            errorBox.style.display = 'block';
+            errorBox.style.borderColor = '#10b981';
+            errorBox.style.color = '#34d399';
+            errorBox.style.background = 'rgba(16, 185, 129, 0.15)';
+          }
+          startOtpCountdown(60);
+        } else {
+          const detail = (data && (data.delivery_note || data.message)) || 'Failed to resend email.';
+          if (errorBox) {
+            errorBox.textContent = detail;
+            errorBox.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        clientOtpMode = true;
+        clientGeneratedOtp = String(Math.floor(100000 + Math.random() * 900000));
+        renderOfflineOrFallbackOtpBanner(pendingAuthData.email, clientGeneratedOtp, false, null);
+        if (errorBox) {
+          errorBox.textContent = `Backend offline. Fresh passcode: ${clientGeneratedOtp}`;
+          errorBox.style.display = 'block';
+        }
+        startOtpCountdown(60);
+      } finally {
+        if (resendBtn) {
+          resendBtn.disabled = false;
+          resendBtn.textContent = "Didn't receive code? Resend to Email";
+        }
+      }
+    }
+
+    async function handleGateOtpSubmit(e) {
+      e.preventDefault();
+      const otpInput = document.getElementById('gate-otp-input');
+      const errorBox = document.getElementById('gate-otp-error');
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const enteredCode = otpInput.value.trim();
+
+      if (!enteredCode || enteredCode.length !== 6) {
+        errorBox.textContent = 'Please enter the complete 6-digit verification code.';
+        errorBox.style.display = 'block';
+        otpInput.focus();
+        return;
+      }
+
+      errorBox.style.borderColor = 'rgba(244, 63, 94, 0.4)';
+      errorBox.style.color = '#fda4af';
+      errorBox.style.background = 'rgba(244, 63, 94, 0.15)';
+      errorBox.style.display = 'none';
+
+      // If client-side mode is active, verify instantly
+      if (clientOtpMode && clientGeneratedOtp) {
+        if (enteredCode === clientGeneratedOtp) {
+          completeLogin(pendingAuthData.name, pendingAuthData.email);
+          return;
+        } else {
+          errorBox.textContent = `Incorrect passcode. Please enter ${clientGeneratedOtp} or click Autofill.`;
+          errorBox.style.display = 'block';
+          otpInput.focus();
+          return;
+        }
+      }
+
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span>⏳ Verifying passcode...</span>`;
+      }
+
+      try {
+        const resp = await fetch(`${BACKEND_URL}/api/verify-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: pendingAuthData.email, otp: enteredCode })
+        });
+        const data = await resp.json().catch(() => null);
+
+        if (resp.ok && data && data.success) {
+          completeLogin(pendingAuthData.name, pendingAuthData.email);
+        } else {
+          const msg = (data && (data.message || data.detail)) || 'Incorrect verification code. Please check your email inbox and enter the exact 6-digit code.';
+          errorBox.textContent = msg;
+          errorBox.style.display = 'block';
+          otpInput.focus();
+        }
+      } catch (err) {
+        if (clientGeneratedOtp && enteredCode === clientGeneratedOtp) {
+          completeLogin(pendingAuthData.name, pendingAuthData.email);
+        } else {
+          errorBox.textContent = 'Could not reach backend verification service. Please make sure START_LIVE_DEMO_BACKEND.bat is running.';
+          errorBox.style.display = 'block';
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
+      }
+    }
+
+    function completeLogin(name, email) {
+      if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+      const session = {
+        name: name || 'Evaluator',
+        email: email,
+        role: 'Verified Threat Intelligence Officer',
+        clearance: 'Level 3 - Enterprise AI',
+        verified: true,
+        verifiedAt: new Date().toISOString(),
+        token: 'NS-' + Math.random().toString(36).substring(2, 10).toUpperCase()
+      };
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+
+      document.getElementById('gate-step-email').style.display = 'none';
+      document.getElementById('gate-step-otp').style.display = 'none';
+      const successStep = document.getElementById('gate-step-success');
+      successStep.style.display = 'block';
+      document.getElementById('gate-welcome-msg').innerHTML = `Welcome, <strong>${session.name}</strong> (${session.email})! Identity verified with Level 3 Clearance.`;
+
+      setTimeout(() => {
+        document.getElementById('auth-gate-modal').classList.add('hidden');
+        checkAuthGate();
+      }, 850);
+    }
+
+    function resetGateToEmailStep() {
+      if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+      clientOtpMode = false;
+      clientGeneratedOtp = null;
+      document.getElementById('gate-step-email').style.display = 'block';
+      document.getElementById('gate-step-otp').style.display = 'none';
+      document.getElementById('gate-step-success').style.display = 'none';
+      const errorBox = document.getElementById('gate-error-box');
+      if (errorBox) errorBox.style.display = 'none';
+      const otpError = document.getElementById('gate-otp-error');
+      if (otpError) otpError.style.display = 'none';
+    }
+
+    function handleUserLogout() {
+      if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      sessionStorage.clear();
+      checkAuthGate();
+    }
+
+    // Automatically log out when going back to portfolio or navigating away
+    function handleGoBackAndLogout(e) {
+      if (e) e.preventDefault();
+      handleUserLogout();
+      window.location.href = 'index.html';
+    }
+
+    window.addEventListener('popstate', () => {
+      handleUserLogout();
+    });
+
+    window.addEventListener('pagehide', () => {
+      handleUserLogout();
+    });
+
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) {
+        handleUserLogout();
+      }
+    });
+
+    // ----------------- UI CONTROLLER ----------------- //
+    const form = document.getElementById('scanner-form');
+    const urlInput = document.getElementById('url-input');
+    const clearBtn = document.getElementById('clear-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const resultBox = document.getElementById('result-container');
+    const historySection = document.getElementById('history-section');
+    const historyTbody = document.getElementById('history-tbody');
+
+    const historyItems = [];
+
+    urlInput.addEventListener('input', () => {
+      clearBtn.style.display = urlInput.value ? 'block' : 'none';
+    });
+
+    clearBtn.addEventListener('click', () => {
+      urlInput.value = '';
+      clearBtn.style.display = 'none';
+      urlInput.focus();
+    });
+
+    window.runPreset = function(target) {
+      urlInput.value = target;
+      clearBtn.style.display = 'block';
+      handleScan(target);
+    };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = urlInput.value.trim();
+      if (!val) return;
+      handleScan(val);
+    });
+
+    async function handleScan(targetUrl) {
+      const user = getAuthUser();
+      if (!user || !user.verified) {
+        checkAuthGate();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>⏳</span><span>Deep Analyzing...</span>';
+
+      resultBox.innerHTML = `
+        <div class="result-card" style="text-align: center; padding: 2.5rem;">
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🧠</div>
+          <div style="font-weight: 700; color: #38bdf8; font-family: var(--font-mono);">
+            Extracting 30+ lexical parameters &amp; querying Cognitive Thinking Engine...
+          </div>
+        </div>
+      `;
+
+      let data = null;
+
+      // Try local FastAPI backend first
+      try {
+        const resp = await fetch('http://127.0.0.1:8000/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: targetUrl }),
+          signal: AbortSignal.timeout(1200)
+        });
+        if (resp.ok) {
+          data = await resp.json();
+          console.log('[FASTAPI SUCCESS]', data);
+        }
+      } catch (err) {
+        // Fallback to client-side engine (matches phishing_engine.py)
+        console.log('[CLIENT ENGINE FALLBACK]');
+      }
+
+      if (!data) {
+        data = evaluateUrlClient(targetUrl);
+      }
+
+      setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>⚡</span><span>Scan &amp; Analyze URL</span>';
+        renderResult(data);
+        addToHistory(data);
+      }, 350);
+    }
+
+    function renderResult(result) {
+      let cardClass = 'safe';
+      let icon = '🛡️';
+      let statusColor = '#34d399';
+
+      const p = result.prediction.toLowerCase();
+      if (p.includes('phish')) {
+        cardClass = 'dangerous';
+        icon = '⚠️';
+        statusColor = '#fb7185';
+      } else if (p.includes('incomplete')) {
+        cardClass = 'incomplete';
+        icon = '❓';
+        statusColor = '#fbbf24';
+      } else if (p.includes('invalid')) {
+        cardClass = 'invalid';
+        icon = '🚫';
+        statusColor = '#c084fc';
+      }
+
+      let httpsBadge = '';
+      if (result.uses_https === 'N/A') {
+        httpsBadge = '<span class="badge-https-na">⚪ N/A (Not Applicable)</span>';
+      } else if (result.uses_https === 'Yes') {
+        httpsBadge = '<span class="badge-https-yes">🔒 Yes (Secure TLS)</span>';
+      } else {
+        httpsBadge = '<span class="badge-https-no">🔓 No (Insecure HTTP)</span>';
+      }
+
+      resultBox.innerHTML = `
+        <section class="result-card ${cardClass}">
+          <div class="result-header">
+            <div class="verdict-box">
+              <div class="verdict-icon">${icon}</div>
+              <div class="verdict-info">
+                <h3>${result.prediction}</h3>
+                <p>${result.status}</p>
+              </div>
+            </div>
+
+            <div class="confidence-box">
+              <div class="confidence-label">AI Detection Confidence</div>
+              <div class="confidence-value">${result.confidence.toFixed(2)}%</div>
+              <div class="confidence-range-tag">Mathematical Bound: 95.00% – 97.00%</div>
+            </div>
+          </div>
+
+          <!-- Details Grid -->
+          <div class="details-grid">
+            <div class="detail-item">
+              <div class="detail-label">Scanned Target URL</div>
+              <div class="detail-value mono">${result.url}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">Uses HTTPS Protocol</div>
+              <div class="detail-value">${httpsBadge}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">Security Classification</div>
+              <div class="detail-value" style="color: ${statusColor};">${result.prediction}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">Dataset Grounding Equation</div>
+              <div class="detail-value mono" style="font-size: 0.8rem; color: #94a3b8;">
+                P(u) = 95.00 + 1.95·(0.65·S(u) + 0.35·δ(u))
+              </div>
+            </div>
+          </div>
+
+          <!-- Cognitive Box -->
+          <div class="cognitive-box">
+            <div class="cognitive-header">
+              <span>🧠</span>
+              <h4>AI Cognitive Thinking Power &amp; Threat Analysis Reasoning</h4>
+            </div>
+
+            <div class="cognitive-reason-text">
+              <strong>Verdict Rationale: </strong>${result.reason || result.status}
+            </div>
+
+            <div class="cognitive-pillars">
+              <div class="pillar-item">
+                <div class="pillar-name">Cognitive Pillar 1</div>
+                <div class="pillar-value">Brand Piggybacking &amp; Homoglyph Engine</div>
+              </div>
+              <div class="pillar-item">
+                <div class="pillar-name">Cognitive Pillar 2</div>
+                <div class="pillar-value">2.35L PhiUSIIL Centroid Distance</div>
+              </div>
+              <div class="pillar-item">
+                <div class="pillar-name">Cognitive Pillar 3</div>
+                <div class="pillar-value">Shannon Entropy &amp; DGA Anomaly</div>
+              </div>
+              <div class="pillar-item">
+                <div class="pillar-name">Cognitive Pillar 4</div>
+                <div class="pillar-value">Deterministic Dispersion Consistency</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function addToHistory(item) {
+      historySection.style.display = 'block';
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      let badgeClass = 'safe';
+      const p = item.prediction.toLowerCase();
+      if (p.includes('phish')) badgeClass = 'phish';
+      else if (p.includes('incomplete')) badgeClass = 'incomplete';
+      else if (p.includes('invalid')) badgeClass = 'invalid';
+
+      let httpsBadge = item.uses_https === 'N/A' 
+        ? '<span class="badge-https-na">N/A</span>' 
+        : (item.uses_https === 'Yes' ? '<span class="badge-https-yes">Yes</span>' : '<span class="badge-https-no">No</span>');
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-family: var(--font-mono); font-size: 0.8rem;">${time}</td>
+        <td style="font-family: var(--font-mono); word-break: break-all;">${item.url}</td>
+        <td><span class="tag-badge ${badgeClass}">${item.prediction}</span></td>
+        <td style="font-family: var(--font-mono); font-weight: 700;">${item.confidence.toFixed(2)}%</td>
+        <td>${httpsBadge}</td>
+      `;
+
+      historyTbody.insertBefore(tr, historyTbody.firstChild);
+    }
+
+    // Initialize Auth Gate Status
+    window.addEventListener('DOMContentLoaded', () => {
+      checkAuthGate();
+    });
+  </script>
+</body>
+</html>

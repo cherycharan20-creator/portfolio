@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment & Private Configuration
+email_config.json
+*.env
+*.env.local
+
+# Submodules / Sub-repositories
+downloads_project/
+
+# Python Virtual Environments & Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+
+# System files
+.DS_Store
+Thumbs.db
